@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa-1.8.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+    
+    <context:component-scan base-package="nc.controller"/>
+    <mvc:annotation-driven/>
+    <jpa:repositories base-package="nc.dao"/>
+    
+    <bean id="utilisateurService" class="nc.service.UtilisateurServiceImpl"/>
+    
+    <!-- bean database -->
+     <bean id="datasource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+    	<property name="driverClassName" value="org.postgresql.Driver"/>
+    	<property name="url" value="jdbc:postgresql://localhost:5432/mabase_utilisateur"/>
+    	<property name="username" value="postgres"/>
+    	<property name="password" value="mot2passe"/>
+    </bean>
+    
+       <!-- entityManagerFactory -->
+	 <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+    	<property name="dataSource" ref="datasource"/>
+    	<property name="packagesToScan" value="nc.model"/>
+    	<property name="jpaVendorAdapter">
+           <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter" />
+       </property>
+       <property name="jpaProperties">
+       	<props>
+       		 <prop key="hibernate.show_sql">true</prop>
+             <prop key="hibernate.hbm2ddl.auto">update</prop>
+             <prop key="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</prop>
+          </props>
+       </property>
+    </bean>
+    
+	<!-- transactionManger -->
+    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory"/>
+	</bean>
+   
+    <bean id="persistenceExceptionTranslationPostProcessor" class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor" />
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+	
+	<!-- JavaMail -->
+    <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+        <property name="host" value="smtp.free.fr" />
+        <property name="port" value="587" />
+        <property name="username" value="email"/>
+        <property name="password" value="password" />
+        <property name="javaMailProperties">
+            <props>
+                <prop key="mail.smtp.auth">true</prop>
+                <prop key="mail.smtp.starttls.enable">true</prop>
+            </props>
+        </property>
+    </bean>
+    
+    <bean id="compteUtilisateurListener" class="nc.event.listener.CompteUtilisateurListener">
+    	<property name="mailSender" ref="mailSender" />
+    </bean>
+	
+</beans>
